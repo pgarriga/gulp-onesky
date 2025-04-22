@@ -110,9 +110,7 @@ function getMultilingualFile(opts, cb)
 
 function doRequest(url, cb)
 {
-  axios.get(url, {
-    responseType: 'arraybuffer'
-  })
+  axios.get(url)
     .then(function (response) {
       var body = response.data;
       var err = null;
