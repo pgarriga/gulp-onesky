@@ -4,7 +4,7 @@ var querystring = require('querystring');
 
 var gutil = require('gulp-util');
 var path = require('path');
-var request = require('request');
+var axios = require('axios');
 var through = require('through');
 
 module.exports = function (opts) {
@@ -110,19 +110,29 @@ function getMultilingualFile(opts, cb)
 
 function doRequest(url, cb)
 {
-  request({ url: url, encoding: null, json: true }, function (err, res, body) {
-    if (err) {
-      err = new gutil.PluginError('gulp-onesky', err.message || err.toString());
-    } else if (body.meta) {
-      if (body.meta.status !== 200) {
-        err = new gutil.PluginError('gulp-onesky', body.meta.message);
-      } else {
-        body = body.meta.data;
-      }
-    }
+  axios.get(url, {
+    responseType: 'arraybuffer'
+  })
+    .then(function (response) {
+      var body = response.data;
+      var err = null;
 
-    cb(err, body);
-  });
+      if (body.meta) {
+        if (body.meta.status !== 200) {
+          err = new gutil.PluginError('gulp-onesky', body.meta.message);
+          cb(err, null);
+          return;
+        } else {
+          body = body.meta.data;
+        }
+      }
+
+      cb(null, body);
+    })
+    .catch(function (error) {
+      var err = new gutil.PluginError('gulp-onesky', error.message || error.toString());
+      cb(err, null);
+    });
 }
 
 module.exports.locales = function (opts) {
